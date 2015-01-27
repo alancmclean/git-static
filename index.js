@@ -43,20 +43,22 @@ exports.getSha = function(repository, revision, callback) {
 };
 
 exports.getBranchCommits = function(repository, callback) {
-  child.exec("git for-each-ref refs/heads/ --sort=-authordate --format='%(objectname)\t%(refname:short)\t%(authordate:iso8601)\t%(authoremail)'", {cwd: repository}, function(error, stdout) {
+  child.exec("git for-each-ref refs/heads/ --sort=-authordate --format='%(objectname)\t%(refname:short)\t%(authordate:iso8601)\t%(authoremail)\t%(subject)\n%(body)'", {cwd: repository}, function(error, stdout) {
     if (error) return callback(error);
     callback(null, stdout.split("\n").map(function(line) {
       var fields = line.split("\t"),
           sha = fields[0],
           ref = fields[1],
           date = new Date(fields[2]),
-          author = fields[3];
+          author = fields[3],
+          message = fields[4];
       if (!shaRe.test(sha) || isNaN(date) || !emailRe.test(author)) return;
       return {
         sha: sha,
         ref: ref,
         date: date,
-        author: author.substring(1, author.length - 1)
+        author: author.substring(1, author.length - 1),
+        message: message
       };
     }).filter(function(commit) {
       return commit;
