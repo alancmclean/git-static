@@ -23,6 +23,14 @@ var logKeys = {
   '%s': 'subject'
 };
 
+function getLogKey(key){
+  if (key in logKeys){
+    return logKeys[key];
+  }else{
+    return false;
+  }
+};
+
 function readBlob(repository, revision, file, callback) {
   var git = child.spawn("git", ["cat-file", "blob", revision + ":" + file], {cwd: repository}),
       data = [],
@@ -97,7 +105,10 @@ exports.getLog = function(repository, revision, format, callback){
       var message = {};
       
       values.forEach(function(value, i){
-        message[format[i]] = value
+        var key = getLogKey(format[i]]);
+        if(key){
+          message[key] = value;
+        }
       });
 
       return message;
