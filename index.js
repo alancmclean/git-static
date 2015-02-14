@@ -23,7 +23,7 @@ var logKeys = {
   '%s': 'subject'
 };
 
-function getLogKey(key){
+function getLogKey(key) {
   if (key in logKeys){
     return logKeys[key];
   }else{
@@ -98,11 +98,11 @@ exports.getLog = function(repository, revision, format, callback){
   child.exec("git log "+revision+" --pretty=format:'"+keys+"'", {cwd: repository}, function(error, stdout) {
     if (error) return callback(error);
 
-    var lines = stdout.split("\n").map(function(line){
+    var lines = stdout.split("\n").map(function(line) {
       var values = line.split(delimeter);
       var message = {};
       // this could be a lot better, so hacky
-      values.forEach(function(value, i){
+      values.forEach(function(value, i) {
         var key = getLogKey(format[i]);
         if(key){
           message[key] = value;
