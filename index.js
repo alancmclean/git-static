@@ -105,7 +105,7 @@ exports.getLog = function(repository, revision, format, callback){
       var message = {};
       
       values.forEach(function(value, i){
-        var key = getLogKey(format[i]]);
+        var key = getLogKey(format[i]);
         if(key){
           message[key] = value;
         }
