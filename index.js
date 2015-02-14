@@ -5,6 +5,24 @@ var child = require("child_process"),
 var shaRe = /^[0-9a-f]{40}$/,
     emailRe = /^<.*@.*>$/;
 
+var logKeys = {
+  '%H': 'hash',
+  '%h': 'abbrevHash',
+  '%T': 'treeHash',
+  '%t': 'abbrevTreeHash',
+  '%P': 'parentHash',
+  '%p': 'abbrevParentHash',
+  '%an': 'authorName',
+  '%ae': 'authorEmail',
+  '%ad': 'authorDate',
+  '%ar': 'authorDateRelative',
+  '%cn': 'committerName',
+  '%ce': 'committerEmail',
+  '%cd': 'committerDate',  
+  '%cr': 'committerDateRelative',
+  '%s': 'subject'
+};
+
 function readBlob(repository, revision, file, callback) {
   var git = child.spawn("git", ["cat-file", "blob", revision + ":" + file], {cwd: repository}),
       data = [],
@@ -43,6 +61,53 @@ exports.getSha = function(repository, revision, callback) {
 };
 
 exports.getBranchCommits = function(repository, callback) {
+  child.exec("git for-each-ref refs/heads/ --sort=-authordate --format='%(objectname)\t%(refname:short)\t%(authordate:iso8601)\t%(authoremail)\t%(subject)\n%(body)'", {cwd: repository}, function(error, stdout) {
+    if (error) return callback(error);
+    callback(null, stdout.split("\n").map(function(line) {
+      var fields = line.split("\t"),
+          sha = fields[0],
+          ref = fields[1],
+          date = new Date(fields[2]),
+          author = fields[3],
+          message = fields[4];
+      if (!shaRe.test(sha) || isNaN(date) || !emailRe.test(author)) return;
+      return {
+        sha: sha,
+        ref: ref,
+        date: date,
+        author: author.substring(1, author.length - 1),
+        message: message
+      };
+    }).filter(function(commit) {
+      return commit;
+    }));
+  });
+};
+
+exports.getLog = function(repository, revision, format, callback){
+  var delimeter = "|";
+  var keys = format.slice().join(delimeter);
+  child.exec("git log "+revision+" --pretty=format:'"+keys+"'", {cwd: repository}, function(error, stdout) {
+    if (error) return callback(error);
+
+    var lines = stdout.split("\n").map(function(line){
+      // 956eb71 | Alan McLean | 4 months ago | tweakins
+      var values = line.split(delimeter);
+      // [956eb71, Alan McLean, 4 months ago, tweakins]
+      var message = {};
+      
+      values.forEach(function(value, i){
+        message[format[i]] = value
+      });
+
+      return message;
+    });
+    callback(null, lines);
+  });
+};
+
+exports.getAllBranchCommits = function(repository, revision, callback) {
+  
   child.exec("git for-each-ref refs/heads/ --sort=-authordate --format='%(objectname)\t%(refname:short)\t%(authordate:iso8601)\t%(authoremail)\t%(subject)\n%(body)'", {cwd: repository}, function(error, stdout) {
     if (error) return callback(error);
     callback(null, stdout.split("\n").map(function(line) {
