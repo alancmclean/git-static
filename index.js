@@ -117,7 +117,7 @@ exports.getLog = function(repository, revision, format, callback){
 
 exports.getAllBranchCommits = function(repository, revision, callback) {
   
-  child.exec("git for-each-ref refs/heads/ --sort=-authordate --format='%(objectname)\t%(refname:short)\t%(authordate:iso8601)\t%(authoremail)\t%(subject)\n%(body)'", {cwd: repository}, function(error, stdout) {
+  child.exec("git for-each-ref refs/heads/ --sort=-authordate --format='%(objectname)\t%(refname:short)\t%(authordate:iso8601)\t%(authoremail)\t%(subject)'", {cwd: repository}, function(error, stdout) {
     if (error) return callback(error);
     callback(null, stdout.split("\n").map(function(line) {
       var fields = line.split("\t"),
