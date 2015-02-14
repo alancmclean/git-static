@@ -93,17 +93,15 @@ exports.getBranchCommits = function(repository, callback) {
 };
 
 exports.getLog = function(repository, revision, format, callback){
-  var delimeter = "|";
+  var delimeter = "-|-";
   var keys = format.slice().join(delimeter);
   child.exec("git log "+revision+" --pretty=format:'"+keys+"'", {cwd: repository}, function(error, stdout) {
     if (error) return callback(error);
 
     var lines = stdout.split("\n").map(function(line){
-      // 956eb71 | Alan McLean | 4 months ago | tweakins
       var values = line.split(delimeter);
-      // [956eb71, Alan McLean, 4 months ago, tweakins]
       var message = {};
-      
+      // this could be a lot better, so hacky
       values.forEach(function(value, i){
         var key = getLogKey(format[i]);
         if(key){
